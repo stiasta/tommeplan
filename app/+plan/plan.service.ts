@@ -5,7 +5,6 @@ import 'rxjs/add/operator/map';
 import {Plan} from './plan.model';
 import {Week} from './week.model';
 import {Platform} from 'ionic-angular';
-import {InAppBrowser} from 'ionic-native';
 
 @Injectable()
 export class PlanService {
@@ -18,12 +17,12 @@ export class PlanService {
             return Observable.from([this.mapToPlan(
                 this.dummyHtml())]);
         } else {
-            let browser = InAppBrowser.open('http://trv.no/?planb=Bl%C3%A5klokkevegen&id=145257&scid=tommeplan-showcase', '_system');
-            browser.executeScript(
-                'document.getElementById("tommeplan-display")',
-                result => {
-                    console.log(result);
-                    browser.close();
+            let browser = this.http
+                .post('http://trv.no/wp-content/themes/sircon/aj/aj.php', JSON.stringify({ action: 'get_tommeplan'}))
+                .map(response => {
+                    console.log('toString: ' + response.toString());
+                    console.log('text: ' + response.text());
+                    console.log('json: ' + response.json());
                 });
 
             return Observable.from([new Plan([])]);
