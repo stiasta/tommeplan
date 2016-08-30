@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {Http, Headers, URLSearchParams} from '@angular/http';
-import {Observable} from 'rxjs/Rx';
 import 'rxjs/add/operator/map';
+import * as $ from 'jquery';
 import {Plan} from './plan.model';
 import {Week} from './week.model';
 import {Platform} from 'ionic-angular';
@@ -13,10 +13,6 @@ export class PlanService {
     }
 
     get(road: string) {
-        // if (this.platform.is('core')) {
-        //     return Observable.from([this.mapToPlan(
-        //         this.dummyHtml())]);
-        // } else {
         let params = new URLSearchParams();
         params.set('action', 'get_tommeplan_year');
         params.set('target_adress', road);
@@ -28,40 +24,22 @@ export class PlanService {
                 headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' })
             })
             .map(response => this.mapToPlan(response.text()));
-        // }
-        // return this.http
-        //     .post('http://trv.no/wp-content/themes/sircon/aj/aj.php', { action: 'get_tommeplan_year', target_address: road })
-        //     .map(response => {
-        //         return new Plan();
-        //     });
     }
 
     private mapToPlan(html: string) {
-        let doc = document.implementation.createDocument('http://www.w3.org/1999/xhtml', 'html', null);
-        let element = document.createElement('body');
-        element.innerHTML = html;
-        doc.documentElement.appendChild(element);
-
         let weeks: Week[] = [];
-        let weekNodes = doc.getElementsByClassName('tomme-week');
-        for (var indeks in weekNodes) {
-            if (weekNodes.hasOwnProperty(indeks)) {
-                var week = weekNodes[indeks];
-
-                let num = week.getElementsByClassName('tomme-week-title').item(0).textContent;
+        $(html)
+            .find('.tomme-week')
+            .each((index, week) => {
+                let num = $(week).find('.tomme-week-title').text();
                 num = num[4] + num[5];
                 let types: string[] = [];
-                var typeNodes = week.getElementsByClassName('tomming-name');
-                for (var key in typeNodes) {
-                    if (weekNodes.hasOwnProperty(key)) {
-                        var type = typeNodes[key];
-                        types.push(type.textContent);
-                    }
-                }
+                $(week)
+                    .find('tomming-name')
+                    .each((subindex, type) => types.push($(type).text()));
 
                 weeks.push(new Week(parseInt(num), types));
-            }
-        }
+            });
 
         return new Plan(weeks);
     }
