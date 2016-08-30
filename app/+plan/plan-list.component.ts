@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import * as moment from 'moment';
 import { PlanService } from './plan.service';
 import { Plan } from './plan.model';
+import { Week }from './week.model';
 
 @Component({
     selector: 'tp-plan-list',
@@ -9,6 +11,7 @@ import { Plan } from './plan.model';
 export class PlanListComponent implements OnInit {
     plan: Plan;
     constructor(private service: PlanService) {
+        this.plan = { weeks: [], activeWeeks: () => [] };
     }
 
     ngOnInit() {
@@ -17,5 +20,13 @@ export class PlanListComponent implements OnInit {
             .subscribe(plan => {
                 this.plan = plan;
             });
+    }
+
+    startDate(week: Week) {
+        return moment(week.getStartDate()).format('DD. MMM');
+    }
+
+    endDate(week: Week) {
+        return moment(week.getEndDate()).format('DD. MMM');
     }
 }

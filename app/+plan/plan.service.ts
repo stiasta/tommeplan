@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {Http} from '@angular/http';
+import {Http, Headers, URLSearchParams} from '@angular/http';
 import {Observable} from 'rxjs/Rx';
 import 'rxjs/add/operator/map';
 import {Plan} from './plan.model';
@@ -13,20 +13,22 @@ export class PlanService {
     }
 
     get(road: string) {
-        if (this.platform.is('core')) {
-            return Observable.from([this.mapToPlan(
-                this.dummyHtml())]);
-        } else {
-            let browser = this.http
-                .post('http://trv.no/wp-content/themes/sircon/aj/aj.php', JSON.stringify({ action: 'get_tommeplan'}))
-                .map(response => {
-                    console.log('toString: ' + response.toString());
-                    console.log('text: ' + response.text());
-                    console.log('json: ' + response.json());
-                });
-
-            return Observable.from([new Plan([])]);
-        }
+        // if (this.platform.is('core')) {
+        //     return Observable.from([this.mapToPlan(
+        //         this.dummyHtml())]);
+        // } else {
+        let params = new URLSearchParams();
+        params.set('action', 'get_tommeplan_year');
+        params.set('target_adress', road);
+        params.set('is_container', '0');
+        params.set('id', '145257');
+        return this.http
+            .post('http://trv.no/wp-content/themes/sircon/aj/aj.php', params.toString(),
+            {
+                headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' })
+            })
+            .map(response => this.mapToPlan(response.text()));
+        // }
         // return this.http
         //     .post('http://trv.no/wp-content/themes/sircon/aj/aj.php', { action: 'get_tommeplan_year', target_address: road })
         //     .map(response => {
@@ -35,8 +37,10 @@ export class PlanService {
     }
 
     private mapToPlan(html: string) {
-        let doc = document.implementation.createDocument('', 'html', document.implementation.createDocumentType('html', '', ''));
-        doc.documentElement.innerHTML = html;
+        let doc = document.implementation.createDocument('http://www.w3.org/1999/xhtml', 'html', null);
+        let element = document.createElement('body');
+        element.innerHTML = html;
+        doc.documentElement.appendChild(element);
 
         let weeks: Week[] = [];
         let weekNodes = doc.getElementsByClassName('tomme-week');
@@ -47,7 +51,7 @@ export class PlanService {
                 let num = week.getElementsByClassName('tomme-week-title').item(0).textContent;
                 num = num[4] + num[5];
                 let types: string[] = [];
-                var typeNodes = week.getElementsByClassName('tomming-name')
+                var typeNodes = week.getElementsByClassName('tomming-name');
                 for (var key in typeNodes) {
                     if (weekNodes.hasOwnProperty(key)) {
                         var type = typeNodes[key];
