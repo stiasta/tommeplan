@@ -23,10 +23,10 @@ export class PlanListComponent implements OnInit {
     }
 
     startDate(week: Week) {
-        return moment(week.getStartDate()).format('DD. MMM');
+        return moment(week.getStartDate()).format('DD.MM');
     }
 
     endDate(week: Week) {
-        return moment(week.getEndDate()).format('DD. MMM');
+        return moment(week.getEndDate()).format('DD.MM');
     }
 }

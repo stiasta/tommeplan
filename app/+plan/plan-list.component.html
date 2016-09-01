@@ -1,5 +1,8 @@
 <ion-list>
     <ion-item *ngFor="let week of plan.activeWeeks()">
-        {{startDate(week)}} - {{endDate(week)}}: {{ week.types }} (Uke: {{week.weekNumber}})
+        {{ week.types }}
+        <ion-note item-right>
+            {{startDate(week)}} - {{endDate(week)}}:
+        </ion-note>         
     </ion-item>
 </ion-list>

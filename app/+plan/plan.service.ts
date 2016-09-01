@@ -35,7 +35,7 @@ export class PlanService {
                 num = num[4] + num[5];
                 let types: string[] = [];
                 $(week)
-                    .find('tomming-name')
+                    .find('.tomming-name')
                     .each((subindex, type) => types.push($(type).text()));
 
                 weeks.push(new Week(parseInt(num), types));
