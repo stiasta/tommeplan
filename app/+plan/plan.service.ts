@@ -1,10 +1,12 @@
 import {Injectable} from '@angular/core';
 import {Http, Headers, URLSearchParams} from '@angular/http';
+import { Observable } from 'rxjs/Rx';
 import 'rxjs/add/operator/map';
 import * as $ from 'jquery';
 import {Plan} from './plan.model';
 import {Week} from './week.model';
 import {Platform} from 'ionic-angular';
+import {NativeStorage} from 'ionic-native';
 
 @Injectable()
 export class PlanService {
@@ -12,18 +14,67 @@ export class PlanService {
         private platform: Platform) {
     }
 
+    getLatest() {
+        if (this.platform.is('mobileweb')) {
+            return Observable.from([this.emptyPlan()]);
+        }
+
+        return Observable.fromPromise(NativeStorage.getItem('latest')) as Observable<Plan>;
+    }
+
     get(road: string) {
+        return this.getRoadId(road)
+            .flatMap(id => {
+                if (id === -1) {
+                    return Observable.from([this.emptyPlan()]);
+                }
+
+                let params = new URLSearchParams();
+                params.set('action', 'get_tommeplan_year');
+                params.set('target_adress', road);
+                params.set('is_container', '0');
+                params.set('id', id.toString());
+
+                return this.http
+                    .post('http://trv.no/wp-content/themes/sircon/aj/aj.php', params.toString(),
+                    {
+                        headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' })
+                    })
+                    .map(response => {
+                        let plan = this.mapToPlan(response.text());
+                        if (!this.platform.is('mobileweb')) {
+                            NativeStorage.setItem('latest', plan);
+                        }
+
+                        return plan;
+                    });
+            });
+    }
+
+    getRoadId(road: string) {
         let params = new URLSearchParams();
-        params.set('action', 'get_tommeplan_year');
-        params.set('target_adress', road);
+        params.set('action', 'finn_tommeplan_adresser');
+        params.set('adr', road);
         params.set('is_container', '0');
-        params.set('id', '145257');
         return this.http
             .post('http://trv.no/wp-content/themes/sircon/aj/aj.php', params.toString(),
             {
                 headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' })
             })
-            .map(response => this.mapToPlan(response.text()));
+            .map(response => {
+                let html = response.text();
+                if (!html) {
+                    return -1;
+                }
+
+                html = html[0] === '1' ? html.slice(1) : html;
+                var adresses = $(html).find('.adr-option');
+                if (!adresses || adresses.length !== 1) {
+                    return -1;
+                }
+
+                return parseInt(adresses.attr('data-adrid'));
+            });
     }
 
     private mapToPlan(html: string) {
@@ -42,6 +93,10 @@ export class PlanService {
             });
 
         return new Plan(weeks);
+    }
+
+    private emptyPlan() {
+        return { weeks: [], activeWeeks: () => [] } as Plan;
     }
 
     private dummyHtml() {
