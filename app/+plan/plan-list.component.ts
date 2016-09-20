@@ -10,6 +10,7 @@ import { Subscription, Subject } from 'rxjs/Rx';
 })
 export class PlanListComponent implements OnInit, OnDestroy {
     plan: Plan;
+    searchInput: string;
     private subscription: Subscription;
     private getPlanSource: Subject<string> = new Subject<string>();
 
@@ -20,6 +21,7 @@ export class PlanListComponent implements OnInit, OnDestroy {
     ngOnInit() {
         this.service.getLatest()
             .subscribe(plan => {
+                this.searchInput = plan.road;
                 this.plan = plan;
             });
 
@@ -56,7 +58,7 @@ export class PlanListComponent implements OnInit, OnDestroy {
             return;
         }
 
-        let val = event.target.value;
+        let val = this.searchInput;
         if (!val && val.trim() === '') {
             this.resetPlan();
             return;
@@ -70,6 +72,6 @@ export class PlanListComponent implements OnInit, OnDestroy {
     }
 
     private resetPlan() {
-        this.plan = { weeks: [], activeWeeks: () => [] };
+        this.plan = { road: '', weeks: [], activeWeeks: () => [] };
     }
 }

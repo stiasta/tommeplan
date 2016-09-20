@@ -1,25 +1,22 @@
 import {Injectable} from '@angular/core';
 import {Http, Headers, URLSearchParams} from '@angular/http';
-import { Observable } from 'rxjs/Rx';
-import 'rxjs/add/operator/map';
 import * as $ from 'jquery';
+import {Observable} from 'rxjs/Rx';
 import {Plan} from './plan.model';
 import {Week} from './week.model';
+import {StorageService} from './storage.service';
 import {Platform} from 'ionic-angular';
-import {NativeStorage} from 'ionic-native';
 
 @Injectable()
 export class PlanService {
-    constructor(private http: Http,
-        private platform: Platform) {
+    constructor(
+		private http: Http,
+        private platform: Platform,
+		private storage: StorageService) {
     }
 
-    getLatest() {
-        if (this.platform.is('mobileweb')) {
-            return Observable.from([this.emptyPlan()]);
-        }
-
-        return Observable.fromPromise(NativeStorage.getItem('latest')) as Observable<Plan>;
+    getLatest(): Observable<Plan> | Observable<any> | any { // very strange hack to get tslint to work properly :|
+        return this.storage.get('latest').map((plan: Plan) => plan);
     }
 
     get(road: string) {
@@ -40,13 +37,9 @@ export class PlanService {
                     {
                         headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' })
                     })
-                    .map(response => {
-                        let plan = this.mapToPlan(response.text());
-                        if (!this.platform.is('mobileweb')) {
-                            NativeStorage.setItem('latest', plan);
-                        }
-
-                        return plan;
+                    .flatMap(response => {
+                        let plan = this.mapToPlan(road, response.text());
+						return this.storage.set('latest', plan).map(() => plan);
                     });
             });
     }
@@ -77,7 +70,7 @@ export class PlanService {
             });
     }
 
-    private mapToPlan(html: string) {
+    private mapToPlan(road: string, html: string) {
         let weeks: Week[] = [];
         $(html)
             .find('.tomme-week')
@@ -92,7 +85,7 @@ export class PlanService {
                 weeks.push(new Week(parseInt(num), types));
             });
 
-        return new Plan(weeks);
+        return new Plan(weeks, road);
     }
 
     private emptyPlan() {

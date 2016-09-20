@@ -2,11 +2,11 @@ import {Component} from '@angular/core';
 import {Platform, ionicBootstrap} from 'ionic-angular';
 import {StatusBar} from 'ionic-native';
 import {HomeComponent} from './+home/home.component';
-import {PlanService} from './+plan/index';
+import { PlanService, StorageService } from './+plan/index';
 
 @Component({
   template: '<ion-nav [root]="rootPage"></ion-nav>',
-  providers: [PlanService]
+  providers: [PlanService, StorageService]
 })
 export class MyApp {
   rootPage: any = HomeComponent;

@@ -2,7 +2,8 @@ import { Week } from './week.model';
 import * as moment from 'moment';
 export class Plan {
     constructor(
-        public weeks: Week[]) {
+        public weeks: Week[],
+        public road: string) {
         this.weeks = this.weeks || [];
     }
 
