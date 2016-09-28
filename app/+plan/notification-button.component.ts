@@ -1,5 +1,5 @@
 import { LocalNotifications } from 'ionic-native';
-import { Alert, AlertController, Platform } from 'ionic-angular';
+import { Alert, AlertController, AlertOptions, Platform } from 'ionic-angular';
 import { Component } from '@angular/core';
 import { PlanService } from './plan.service';
 import * as moment from 'moment';
@@ -9,28 +9,31 @@ import * as moment from 'moment';
 })
 export class NotificationButtonComponent {
     private alert: Alert;
+    private isCordova: boolean;
     constructor(
         private service: PlanService,
         private platform: Platform,
         private alertCtrl: AlertController) {
 
         this.alert = this.alertCtrl.create({
-            title: 'Opprett varsler?',
-            message: 'Hvis du trykker Ok, så vil varsler bli opprettet og komme en dag før uken starter.',
-            buttons: [
-                {
-                    title: 'Avbryt',
-                    handler: () => false
-                },
-                {
-                    title: 'Ok',
-                    handler: () => true
-                }]
+            title: 'Oppretter varsler',
+            message: 'Varslinger blir opprettet og vil komme en dag før tømmeperioden starter. ',
+            buttons: ['Ok']
         });
+
+        this.init();
+    }
+
+    private init() {
+        this.platform
+            .ready()
+            .then(value => {
+                this.isCordova = value === 'cordova';
+            });
     }
 
     createNotification() {
-        if (!this.platform.is('mobileweb')) {
+        if (!this.isCordova) {
             this.alertCtrl.create({
                 title: 'Ingen varslinger',
                 message: 'Ikke mulig å opprette varslinger på denne enheten.',
@@ -42,29 +45,39 @@ export class NotificationButtonComponent {
 
         this.alert
             .present()
-            .then(isConfirmed => {
-                if (isConfirmed) {
-                    this.service
-                        .getLatest()
-                        .subscribe(plan => {
-                            LocalNotifications
-                                .cancelAll()
-                                .then(() => {
-                                    let counter = 0;
-                                    LocalNotifications.schedule(
-                                        plan.activeWeeks()
-                                            .map(week => {
-                                                let startDate = moment(week.getStartDate());
-                                                return {
-                                                    id: counter++,
-                                                    title: 'Søpla blir hentet i morgen.',
-                                                    text: `Husk å gjøre klar for henting av ${week.types}.`,
-                                                    at: startDate.subtract(1)
-                                                };
-                                            }));
-                                });
-                        });
-                }
+            .then(() => {
+                this.service
+                    .getLatest()
+                    .subscribe(plan => {
+                        LocalNotifications
+                            .cancelAll()
+                            .then(() => {
+                                let counter = 0;
+
+                                LocalNotifications.schedule(
+                                    plan.activeWeeks()
+                                        .map(week => {
+                                            let startDate = 
+                                                moment(week.getStartDate())
+                                                    .hour(10)
+                                                    .minute(0)
+                                                    .subtract(1, "day");
+                                            // console.log({
+                                            //     id: counter++,
+                                            //     title: 'Søpla blir hentet i løpet av uken.',
+                                            //     text: `Husk å gjøre klar for henting av ${week.types}.`,
+                                            //     at: startDate.toDate()
+                                            // });
+
+                                            return {
+                                                id: counter++,
+                                                title: 'Søpla blir hentet i løpet av uken.',
+                                                text: `Husk å gjøre klar for henting av ${week.types}.`,
+                                                at: startDate.toDate()
+                                            };
+                                        }));
+                            });
+                    });
             });
     }
 }

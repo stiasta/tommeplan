@@ -3,7 +3,7 @@
     <ion-item *ngFor="let week of plan.activeWeeks()">
         {{ week.types }}
         <ion-note item-right>
-            {{startDate(week)}} - {{endDate(week)}}:
+            {{week.getPresentationText()}}
         </ion-note>         
     </ion-item>
 </ion-list>

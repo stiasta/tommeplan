@@ -45,6 +45,10 @@ export class PlanService {
     }
 
     getRoadId(road: string) {
+		if(road){
+			road = road.trim();
+		}
+
         let params = new URLSearchParams();
         params.set('action', 'finn_tommeplan_adresser');
         params.set('adr', road);

@@ -8,7 +8,7 @@ export class Plan {
     }
 
     activeWeeks() {
-        var currentWeek = moment().week() - 1;
+        var currentWeek = moment().startOf('isoWeek' as any).week() - 1;
         return this.weeks.filter(week => week.weekNumber >= currentWeek);
     }
 }

@@ -1,3 +1,5 @@
+import * as moment from 'moment';
+
 export class Week {
     constructor(
         public weekNumber: number,
@@ -13,6 +15,19 @@ export class Week {
         let start = this.getStartDate();
         start.setDate(start.getDate() + 6);
         return start;
+    }
+
+    getPresentationText(){
+        let currentWeek = moment().startOf('isoWeek' as any).subtract(1, 'week').week();
+        if(currentWeek == this.weekNumber){
+            return 'Denne uken';
+        }
+
+        if(currentWeek + 1 == this.weekNumber){
+            return 'Neste uke'
+        }
+
+        return `${moment(this.getStartDate()).format('DD.MM')} - ${moment(this.getEndDate()).format('DD.MM')}`;
     }
 
     private firstDayOfWeek(week: number, year?: number) {
