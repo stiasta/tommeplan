@@ -1,12 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import * as moment from 'moment';
-import { PlanService } from './plan.service';
-import { Plan } from './plan.model';
-import { Week }from './week.model';
+import { PlanService, Plan } from './shared/index';
+import { CityButton } from './city/index';
 import { Subscription, Subject } from 'rxjs/Rx';
 @Component({
     selector: 'tp-plan-list',
-    templateUrl: 'build/+plan/plan-list.component.html'
+    templateUrl: 'build/+plan/plan-list.component.html',
+    directives: [CityButton]
 })
 export class PlanListComponent implements OnInit, OnDestroy {
     plan: Plan;

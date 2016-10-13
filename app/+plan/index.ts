@@ -1,2 +1,1 @@
-export * from './plan.service';
-export * from './storage.service';
+export * from './shared/index'

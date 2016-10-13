@@ -1,7 +1,7 @@
 import { LocalNotifications } from 'ionic-native';
-import { Alert, AlertController, AlertOptions, Platform } from 'ionic-angular';
+import { Alert, AlertController, Platform } from 'ionic-angular';
 import { Component } from '@angular/core';
-import { PlanService } from './plan.service';
+import { PlanService } from './shared/index';
 import * as moment from 'moment';
 @Component({
     selector: 'tp-notification-button',
@@ -61,7 +61,7 @@ export class NotificationButtonComponent {
                                                 moment(week.getStartDate())
                                                     .hour(10)
                                                     .minute(0)
-                                                    .subtract(1, "day");
+                                                    .subtract(1, 'day');
                                             // console.log({
                                             //     id: counter++,
                                             //     title: 'Søpla blir hentet i løpet av uken.',
