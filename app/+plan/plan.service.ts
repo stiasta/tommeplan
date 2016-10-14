@@ -1,103 +1,106 @@
-import {Injectable} from '@angular/core';
-import {Http, Headers, URLSearchParams} from '@angular/http';
+import { Injectable } from '@angular/core';
+import { Http, Headers, URLSearchParams } from '@angular/http';
 import * as $ from 'jquery';
-import {Observable} from 'rxjs/Rx';
-import {Plan} from './plan.model';
-import {Week} from './week.model';
-import {StorageService} from './storage.service';
-import {Platform} from 'ionic-angular';
+import { Observable } from 'rxjs/Rx';
+import { Plan } from './plan.model';
+import { Week } from './week.model';
+import { StorageService } from './storage.service';
+import { Platform } from 'ionic-angular';
 
 @Injectable()
 export class PlanService {
-    constructor(
+	constructor(
 		private http: Http,
-        private platform: Platform,
+		private platform: Platform,
 		private storage: StorageService) {
-    }
+	}
 
-    getLatest(): Observable<Plan> | Observable<any> | any { // very strange hack to get tslint to work properly :|
-        return this.storage.get('latest').map((plan: Plan) => plan);
-    }
+	getLatest(): Observable<Plan> | Observable<any> | any { // very strange hack to get tslint to work properly :|
+		return this.storage.get('latest').map((plan: Plan) => plan);
+	}
 
-    get(road: string) {
-        return this.getRoadId(road)
-            .flatMap(id => {
-                if (id === -1) {
-                    return Observable.from([this.emptyPlan()]);
-                }
+	get(road: string) {
+		return this.getRoadId(road)
+			.flatMap(id => {
+				if (id === -1) {
+					return Observable.from([this.emptyPlan()]);
+				}
 
-                let params = new URLSearchParams();
-                params.set('action', 'get_tommeplan_year');
-                params.set('target_adress', road);
-                params.set('is_container', '0');
-                params.set('id', id.toString());
+				let params = new URLSearchParams();
+				params.set('action', 'get_tommeplan_year');
+				params.set('target_adress', road);
+				params.set('is_container', '0');
+				params.set('id', id.toString());
 
-                return this.http
-                    .post('http://trv.no/wp-content/themes/sircon/aj/aj.php', params.toString(),
-                    {
-                        headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' })
-                    })
-                    .flatMap(response => {
-                        let plan = this.mapToPlan(road, response.text());
+				return this.http
+					.post('http://trv.no/wp-content/themes/sircon/aj/aj.php', params.toString(),
+					{
+						headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' })
+					})
+					.flatMap(response => {
+						let plan = this.mapToPlan(road, response.text());
 						return this.storage.set('latest', plan).map(() => plan);
-                    });
-            });
-    }
+					});
+			});
+	}
 
-    getRoadId(road: string) {
-		if(road){
-			road = road.trim();
+	getRoadId(road: string) {
+		if (road) {
+			// removing numbers and trimming spaces.
+			road = road
+				.replace(/[0-9]/g, '')
+				.trim();
 		}
 
-        let params = new URLSearchParams();
-        params.set('action', 'finn_tommeplan_adresser');
-        params.set('adr', road);
-        params.set('is_container', '0');
-        return this.http
-            .post('http://trv.no/wp-content/themes/sircon/aj/aj.php', params.toString(),
-            {
-                headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' })
-            })
-            .map(response => {
-                let html = response.text();
-                if (!html) {
-                    return -1;
-                }
+		let params = new URLSearchParams();
+		params.set('action', 'finn_tommeplan_adresser');
+		params.set('adr', road);
+		params.set('is_container', '0');
+		return this.http
+			.post('http://trv.no/wp-content/themes/sircon/aj/aj.php', params.toString(),
+			{
+				headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' })
+			})
+			.map(response => {
+				let html = response.text();
+				if (!html) {
+					return -1;
+				}
 
-                html = html[0] === '1' ? html.slice(1) : html;
-                var adresses = $(html).find('.adr-option');
-                if (!adresses || adresses.length !== 1) {
-                    return -1;
-                }
+				html = html[0] === '1' ? html.slice(1) : html;
+				var adresses = $(html).find('.adr-option');
+				if (!adresses || adresses.length !== 1) {
+					return -1;
+				}
 
-                return parseInt(adresses.attr('data-adrid'));
-            });
-    }
+				return parseInt(adresses.attr('data-adrid'));
+			});
+	}
 
-    private mapToPlan(road: string, html: string) {
-        let weeks: Week[] = [];
-        $(html)
-            .find('.tomme-week')
-            .each((index, week) => {
-                let num = $(week).find('.tomme-week-title').text();
-                num = num[4] + num[5];
-                let types: string[] = [];
-                $(week)
-                    .find('.tomming-name')
-                    .each((subindex, type) => types.push($(type).text()));
+	private mapToPlan(road: string, html: string) {
+		let weeks: Week[] = [];
+		$(html)
+			.find('.tomme-week')
+			.each((index, week) => {
+				let num = $(week).find('.tomme-week-title').text();
+				num = num[4] + num[5];
+				let types: string[] = [];
+				$(week)
+					.find('.tomming-name')
+					.each((subindex, type) => types.push($(type).text()));
 
-                weeks.push(new Week(parseInt(num), types));
-            });
+				weeks.push(new Week(parseInt(num), types));
+			});
 
-        return new Plan(weeks, road);
-    }
+		return new Plan(weeks, road);
+	}
 
-    private emptyPlan() {
-        return { weeks: [], activeWeeks: () => [] } as Plan;
-    }
+	private emptyPlan() {
+		return { weeks: [], activeWeeks: () => [] } as Plan;
+	}
 
-    private dummyHtml() {
-        return `<div class="tommeplan-fullyear no-show-days">
+	private dummyHtml() {
+		return `<div class="tommeplan-fullyear no-show-days">
 		<div class="legend">
 			<div class="legend-box tomming-papp_papir">Papp / Papir</div>
 			<div class="legend-box tomming-plast">Plast</div>
@@ -217,5 +220,5 @@ export class PlanService {
 			<h4 class="tomme-week-title">Uke 52</h4><div class="tomme-weekdates">26.12-01.01</div><div class="single-tomming tomming-papp_papir">
 					<span class="tomming-name">Papp/Papir</span></div></div><!-- tomme-week --></div>
 									</div></div>`;
-    }
+	}
 }
