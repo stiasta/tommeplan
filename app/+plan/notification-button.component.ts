@@ -1,5 +1,5 @@
 import { LocalNotifications } from 'ionic-native';
-import { Alert, AlertController, AlertOptions, Platform } from 'ionic-angular';
+import { Alert, AlertController, Platform } from 'ionic-angular';
 import { Component } from '@angular/core';
 import { PlanService } from './plan.service';
 import * as moment from 'moment';
@@ -61,7 +61,7 @@ export class NotificationButtonComponent {
                                                 moment(week.getStartDate())
                                                     .hour(10)
                                                     .minute(0)
-                                                    .subtract(1, "day");
+                                                    .subtract(1, 'day');
                                             // console.log({
                                             //     id: counter++,
                                             //     title: 'Søpla blir hentet i løpet av uken.',
@@ -71,8 +71,8 @@ export class NotificationButtonComponent {
 
                                             return {
                                                 id: counter++,
-                                                title: 'Søpla blir hentet i løpet av uken.',
-                                                text: `Husk å gjøre klar for henting av ${week.types}.`,
+                                                title: 'Tømmeplan for neste uke.',
+                                                text: `Neste uke så er det ${week.types}.`,
                                                 at: startDate.toDate()
                                             };
                                         }));
