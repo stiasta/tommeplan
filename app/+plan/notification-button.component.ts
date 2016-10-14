@@ -71,8 +71,8 @@ export class NotificationButtonComponent {
 
                                             return {
                                                 id: counter++,
-                                                title: 'Søpla blir hentet i løpet av uken.',
-                                                text: `Husk å gjøre klar for henting av ${week.types}.`,
+                                                title: 'Tømmeplan for neste uke.',
+                                                text: `Neste uke så er det ${week.types}.`,
                                                 at: startDate.toDate()
                                             };
                                         }));
