@@ -17,14 +17,14 @@ export class Week {
         return start;
     }
 
-    getPresentationText(){
+    getPresentationText() {
         let currentWeek = moment().startOf('isoWeek' as any).subtract(1, 'week').week();
-        if(currentWeek == this.weekNumber){
+        if (currentWeek === this.weekNumber) {
             return 'Denne uken';
         }
 
-        if(currentWeek + 1 == this.weekNumber){
-            return 'Neste uke'
+        if (currentWeek + 1 === this.weekNumber) {
+            return 'Neste uke';
         }
 
         return `${moment(this.getStartDate()).format('DD.MM')} - ${moment(this.getEndDate()).format('DD.MM')}`;
