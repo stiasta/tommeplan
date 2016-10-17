@@ -20,78 +20,25 @@ export class PlanService {
 	}
 
 	get(road: string) {
-		return this.getRoadId(road)
-			.flatMap(id => {
-				if (id === -1) {
-					return Observable.from([this.emptyPlan()]);
-				}
-
-				let params = new URLSearchParams();
-				params.set('action', 'get_tommeplan_year');
-				params.set('target_adress', road);
-				params.set('is_container', '0');
-				params.set('id', id.toString());
-
-				return this.http
-					.post('http://trv.no/wp-content/themes/sircon/aj/aj.php', params.toString(),
-					{
-						headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' })
-					})
-					.flatMap(response => {
-						let plan = this.mapToPlan(road, response.text());
-						return this.storage.set('latest', plan).map(() => plan);
-					});
-			});
-	}
-
-	getRoadId(road: string) {
-		if (road) {
-			// removing numbers and trimming spaces.
-			road = road
-				.replace(/[0-9]/g, '')
-				.trim();
-		}
-
 		let params = new URLSearchParams();
-		params.set('action', 'finn_tommeplan_adresser');
-		params.set('adr', road);
-		params.set('is_container', '0');
+		params.append('city', 'trondheim');
+		params.append('road', road);
 		return this.http
-			.post('http://trv.no/wp-content/themes/sircon/aj/aj.php', params.toString(),
-			{
-				headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' })
+			.get('http://tommeplan.azurewebsites.net/api/plan', {
+				search: params
 			})
-			.map(response => {
-				let html = response.text();
-				if (!html) {
-					return -1;
-				}
-
-				html = html[0] === '1' ? html.slice(1) : html;
-				var adresses = $(html).find('.adr-option');
-				if (!adresses || adresses.length !== 1) {
-					return -1;
-				}
-
-				return parseInt(adresses.attr('data-adrid'));
+			.flatMap(response => {
+				let plan = this.mapToPlan(road, response.text());
+				return this.storage.set('latest', plan).map(() => plan);
 			});
 	}
 
 	private mapToPlan(road: string, html: string) {
-		let weeks: Week[] = [];
-		$(html)
-			.find('.tomme-week')
-			.each((index, week) => {
-				let num = $(week).find('.tomme-week-title').text();
-				num = num[4] + num[5];
-				let types: string[] = [];
-				$(week)
-					.find('.tomming-name')
-					.each((subindex, type) => types.push($(type).text()));
-
-				weeks.push(new Week(parseInt(num), types));
-			});
-
+		let weeks: Week[] = JSON
+			.parse(html)
+			.weeks
+			.map(week => 
+				new Week(parseInt(week.weekNumber), week.types));
 		return new Plan(weeks, road);
 	}
 
