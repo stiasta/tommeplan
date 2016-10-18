@@ -26,13 +26,34 @@ namespace Tommeplan.Controllers
             }
 
             road = road.Trim('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ');
+
+            if (city.ToLower().Equals("jevnaker") || 
+                (road.Split(';').Length == 2))
+            {
+                var split = road.Split(';');
+                if (split[1].ToLower().Trim().Equals("jevnaker"))
+                {
+                    road = split[0].Trim();
+                    return GetPlanJevnaker(road);
+                }
+            }
+            
             var id = GetRoadId(road);
             if (id == -1)
             {
                 throw new HttpException((int)HttpStatusCode.NotFound, "Street not found");
             }
-
+            
             return GetPlan(id, road);
+        }
+
+        private Plan GetPlanJevnaker(string road)
+        {
+            using (var client = new HttpClient())
+            {
+                var html = client.GetStringAsync("http://www.hra.no/index.php/tommeruter/tommeruter-for-jevnaker").Result;
+                return Plan.FromHRA(road, html);
+            }
         }
 
         private FormUrlEncodedContent GetPostContentForPlan(string road, int id)
