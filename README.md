@@ -1,11 +1,9 @@
 # Tømmeplan
 
-App for Android og IOS for å hente ut tømmeplan for Trondheim og omeng.
+Tømmeplan-appen henter ut informasjon om når søppelet blir hentet i din gate i Trondheim og omegn. Tast inn gaten du bor i, så vil tømmeplanen automatisk bli hentet ned til mobilen din. Du kan også aktivere varsling ved å klikke på bjellen øverst til høyre.
 
-Åpent API for uthenting av tømmeplan i JSON-Format finnes her:
-http://tommeplan.azurewebsites.net/help
+For å laste ned tømmeplan-appen så kan man gå [hit](https://github.com/stiasta/tommeplan/wiki/Laste-ned-appen).
 
-Last ned: 
+Mer informasjon kan man finne på [wiki sidene](https://github.com/stiasta/tommeplan/wiki).
 
-[<img src="https://developer.android.com/images/brand/Android_Robot_100.png">](https://play.google.com/store/apps/details?id=com.ionicframework.tommeplan808781)
-
+For å finne ut om din by/kommune kan bli lagt til vennligst opprett en sak på det [her](https://github.com/stiasta/tommeplan/issues).
