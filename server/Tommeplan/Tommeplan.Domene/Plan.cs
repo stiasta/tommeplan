@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Tommeplan
+namespace Tommeplan.Domene
 {
     public class Plan
     {
@@ -44,6 +44,7 @@ namespace Tommeplan
             _weeks = _weeks.OrderBy(x => x.WeekNumber).ToList();
         }
 
+        [Obsolete]
         public static Plan FromTRV(string html)
         {
             var document = new HtmlAgilityPack.HtmlDocument();
@@ -60,6 +61,7 @@ namespace Tommeplan
                     .ToArray());
         }
 
+        [Obsolete]
         private static List<string> GetGarbageTypes(HtmlNode node)
         {
             return node
@@ -72,6 +74,7 @@ namespace Tommeplan
                 .ToList();
         }
 
+        [Obsolete]
         private static int GetWeekNumber(HtmlNode node)
         {
             var numberElement =

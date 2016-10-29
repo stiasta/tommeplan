@@ -1,6 +1,8 @@
 using System;
 using Microsoft.Practices.Unity;
 using Microsoft.Practices.Unity.Configuration;
+using Tommeplan.Repository;
+using System.Collections.Generic;
 
 namespace Tommeplan.App_Start
 {
@@ -34,6 +36,12 @@ namespace Tommeplan.App_Start
         {
             // NOTE: To load from web.config uncomment the line below. Make sure to add a Microsoft.Practices.Unity.Configuration to the using statements.
             // container.LoadConfiguration();
+
+            var dictionary = new Dictionary<string, IPlanRepository>();
+            dictionary.Add("trondheim", new TRVPlanRepository());
+
+            container.RegisterInstance<RepositoryHandler>(
+                new RepositoryHandler(dictionary));
 
             // TODO: Register your types here
             // container.RegisterType<IProductRepository, ProductRepository>();

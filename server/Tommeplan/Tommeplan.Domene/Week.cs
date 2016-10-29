@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 
-namespace Tommeplan
+namespace Tommeplan.Domene
 {
     public class Week
     {
