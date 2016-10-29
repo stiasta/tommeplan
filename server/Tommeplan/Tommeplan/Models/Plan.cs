@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,11 +52,7 @@ namespace Tommeplan
             return new Plan(
                 document
                     .DocumentNode
-                    .SelectNodes("//*[contains(@class, 'tomme-week')]")
-                    .Where(x =>
-                        x.HasAttributes &&
-                        x.Attributes["class"] != null &&
-                        x.Attributes["class"].Value.ToLower().Equals("tomme-week"))
+                    .SelectNodes("//*[contains(@class, 'year-2016')]")
                     .Select(x => new Week(GetWeekNumber(x), GetGarbageTypes(x)))
                     .ToArray());
         }
@@ -67,7 +64,7 @@ namespace Tommeplan
                 .Where(x =>
                     x.HasAttributes &&
                     x.Attributes["class"] != null &&
-                    x.Attributes["class"].Value.ToLower().Equals("tomming-name"))
+                    x.Attributes["class"].Value.ToLower().Contains("wastetype"))
                 .Select(x => x.InnerText)
                 .ToList();
         }
@@ -80,28 +77,16 @@ namespace Tommeplan
                     .First(x =>
                         x.HasAttributes &&
                         x.Attributes["class"] != null &&
-                        x.Attributes["class"].Value.ToLower().Equals("tomme-week-title"));
-            return int.Parse(
-                string.Join(
-                    string.Empty,
-                    numberElement.InnerText[4],
-                    numberElement.InnerText[5]));
+                        x.Attributes["class"].Value.ToLower().Equals("week"));
+            return int.Parse(numberElement.InnerText);
         }
 
         public static int ParseStreetIdFromTRV(string html)
         {
             try
             {
-                var document = new HtmlDocument();
-                document.LoadHtml(html);
-                return int.Parse(
-                    document.DocumentNode
-                        .Descendants()
-                        .First(x =>
-                            x.HasAttributes &&
-                            x.Attributes["data-adrid"] != null)
-                        .Attributes["data-adrid"]
-                        .Value);
+                var dictionary = JsonConvert.DeserializeObject(html) as Newtonsoft.Json.Linq.JArray;
+                return int.Parse(dictionary.Children().ToList().First().Children().ToList().First(x => x.Path.Contains("id")).ToList().First().ToString());
             }
             catch (Exception)
             {

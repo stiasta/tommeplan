@@ -72,9 +72,10 @@ namespace Tommeplan.Controllers
             var client = GetHttpClient();
             var result = 
                 client
-                    .PostAsync(
-                        "http://trv.no/wp-content/themes/sircon/aj/aj.php",
-                        GetPostContentForPlan(road, roadId))
+                    .GetAsync(
+                        string.Format(
+                            "http://trv.no/plan/{0}",
+                            roadId))
                     .Result;
             // avoiding robot redirect
             if (result.RequestMessage.RequestUri.Authority.ToLower().Equals("robots.sircon.net"))
@@ -113,11 +114,12 @@ namespace Tommeplan.Controllers
         private int GetRoadId(string road)
         {
             var client = GetHttpClient();
-            var result = 
+            var result =
                 client
-                    .PostAsync(
-                        "http://trv.no/wp-content/themes/sircon/aj/aj.php", 
-                        GetPostRoadIdContent(road))
+                    .GetAsync(
+                        string.Format(
+                            "http://trv.no/wp-json/wasteplan/v1/BINS/?s={0}",
+                            road))
                     .Result;
             // avoiding robot redirect
             if (result.RequestMessage.RequestUri.Authority.ToLower().Equals("robots.sircon.net"))
