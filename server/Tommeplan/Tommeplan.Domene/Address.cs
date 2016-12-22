@@ -2,7 +2,7 @@
 {
     public class Address
     {
-        public Address(string road, string city, int id)
+        public Address(string road, string city, string id)
         {
             Road = road;
             City = city;
@@ -10,7 +10,7 @@
         }
 
         public string Road { get; set; }
-        public int Id { get; set; }
+        public string Id { get; set; }
         public string City { get; set; }
     }
 }

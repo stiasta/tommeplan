@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,27 +13,18 @@ namespace Tommeplan.Repository
 {
     public class TRVPlanRepository : IPlanRepository
     {
-        public async Task<IEnumerable<Address>> GetAddresses(string text, string city)
+        public async Task<IEnumerable<Address>> GetAddressesAsync(string address)
         {
-            if (string.IsNullOrWhiteSpace(text))
+            if (string.IsNullOrWhiteSpace(address))
             {
                 return new List<Address>();
             }
 
             using (var client = GetHttpClient())
             {
-                var content = new FormUrlEncodedContent(new[]
-                {
-                    new KeyValuePair<string, string>("action", "finn_tommeplan_adresser"),
-                    new KeyValuePair<string, string>("adr", text),
-                    new KeyValuePair<string, string>("is_container", "0")
-                });
-
                 var result =
                     await client
-                        .PostAsync(
-                            "http://trv.no/wp-content/themes/sircon/aj/aj.php",
-                            content);
+                        .GetAsync("http://trv.no/wp-json/wasteplan/v1/BINS/?s=" + address);
 
                 // avoiding robot redirect
                 if (result.RequestMessage.RequestUri.Authority.ToLower().Equals("robots.sircon.net"))
@@ -40,18 +32,18 @@ namespace Tommeplan.Repository
                     var key = HttpUtility.ParseQueryString(result.RequestMessage.RequestUri.Query).Get("key");
                     result =
                         await client
-                            .PostAsync(
-                                "http://trv.no/wp-content/themes/sircon/aj/aj.php?unlockkey=" + key,
-                                content);
+                            .GetAsync(
+                                "http://trv.no/wp-json/wasteplan/v1/BINS/?s=" + address +
+                                "&unlockkey=" + key);
                 }
 
-                var html = await result.Content.ReadAsStringAsync();
-                if (string.IsNullOrWhiteSpace(html))
+                var json = await result.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(json))
                 {
                     throw new HttpException((int)HttpStatusCode.NotFound, "Street not found");
                 }
-                
-                return MapToAddress(html, city);
+
+                return MapToAddress(json, "Trondheim");
             }
         }
 
@@ -66,24 +58,19 @@ namespace Tommeplan.Repository
             return client;
         }
 
+        private async Task<IEnumerable<Address>> GetForContainers(string address)
+        {
+            throw new NotImplementedException();
+        }
+
         private List<Address> MapToAddress(string html, string city)
         {
             try
             {
-                var document = new HtmlDocument();
-                document.LoadHtml(html);
-                return 
-                    document.DocumentNode
-                        .Descendants()
-                        .Where(x =>
-                            x.HasAttributes &&
-                            x.Attributes["data-adrid"] != null)
-                        .Select(
-                            x =>
-                                new Address(
-                                    x.InnerText, 
-                                    city,
-                                    int.Parse(x.Attributes["data-adrid"].Value)))
+                return
+                    JsonConvert
+                        .DeserializeObject<List<AddressTRVDTO>>(html)
+                        .Select(x => new Address(x.Name, city, x.Id))
                         .ToList();
             }
             catch (Exception)
@@ -91,15 +78,135 @@ namespace Tommeplan.Repository
                 return new List<Address>();
             }
         }
-        
+
         public Plan GetPlan(Address address)
         {
-            if(address == null)
+            if (address == null)
             {
-                throw new ArgumentNullException("Need address to find plan");
+                throw new ArgumentNullException("Must have address to find the plan.");
             }
 
-            throw new NotImplementedException();
+            using (var client = GetHttpClient())
+            {
+                var result =
+                    client
+                        .GetAsync("http://trv.no/plan/" + address.Id).Result;
+
+                // avoiding robot redirect
+                if (result.RequestMessage.RequestUri.Authority.ToLower().Equals("robots.sircon.net"))
+                {
+                    var key = HttpUtility.ParseQueryString(result.RequestMessage.RequestUri.Query).Get("key");
+                    result =
+                        client
+                            .GetAsync(
+                                "http://trv.no/plan/" + address.Id +
+                                "&unlockkey=" + key).Result;
+                }
+
+                var html = result.Content.ReadAsStringAsync().Result;
+                if (string.IsNullOrWhiteSpace(html))
+                {
+                    throw new HttpException((int)HttpStatusCode.NotFound, "Street not found");
+                }
+
+                return new TRVMapper(html).ToPlan();
+            }
+        }
+
+        public IEnumerable<Address> GetAddresses(string address)
+        {
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                return new List<Address>();
+            }
+
+            using (var client = GetHttpClient())
+            {
+                var result =
+                    client
+                        .GetAsync("http://trv.no/wp-json/wasteplan/v1/BINS/?s=" + address).Result;
+
+                // avoiding robot redirect
+                if (result.RequestMessage.RequestUri.Authority.ToLower().Equals("robots.sircon.net"))
+                {
+                    var key = HttpUtility.ParseQueryString(result.RequestMessage.RequestUri.Query).Get("key");
+                    result =
+                        client
+                            .GetAsync(
+                                "http://trv.no/wp-json/wasteplan/v1/BINS/?s=" + address +
+                                "&unlockkey=" + key).Result;
+                }
+
+                var json = result.Content.ReadAsStringAsync().Result;
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    throw new HttpException((int)HttpStatusCode.NotFound, "Street not found");
+                }
+
+                return MapToAddress(json, "Trondheim");
+            }
+        }
+
+        internal class AddressTRVDTO
+        {
+            public string Name { get; set; }
+            public string Id { get; set; }
+            public string Type { get; set; }
+        }
+
+        internal class TRVMapper
+        {
+            private readonly HtmlDocument _document;
+
+            public TRVMapper(string html)
+            {
+                _document = new HtmlAgilityPack.HtmlDocument();
+                _document.LoadHtml(html);
+            }
+
+            internal Plan ToPlan()
+            {
+                return 
+                    new Plan(
+                        LagUker(
+                            HentAlleUker()));
+            }
+
+            private IEnumerable<Week> LagUker(HtmlNodeCollection uker)
+            {
+                return
+                    uker
+                        .Select(x =>
+                            new Week(HentUke(x), HentÅr(x), HentTypes(x)));
+            }
+
+            private int HentUke(HtmlNode node)
+            {
+                var weeknumber = node.SelectSingleNode("./td[contains(@class, 'week')]").InnerText;
+                return int.Parse(weeknumber);
+            }
+            
+            private int HentÅr(HtmlNode node)
+            {
+                var year = node.Attributes.First(x => x.Value.ToLower().StartsWith("year")).Value.Split('-')[1];
+                return int.Parse(year.Substring(0, 4));
+            }
+
+            private IEnumerable<string> HentTypes(HtmlNode node)
+            {
+                return
+                    node
+                        .SelectNodes("./td[contains(@class, 'wastetype')]")
+                        .Select(x => x.InnerText);
+            }
+
+            private HtmlNodeCollection HentAlleUker()
+            {
+                return 
+                    _document
+                        .DocumentNode
+                        .SelectNodes("//*[contains(@class, 'year-')]");
+            }
         }
     }
 }

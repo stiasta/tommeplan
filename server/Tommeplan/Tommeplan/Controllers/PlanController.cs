@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Cors;
+using Tommeplan.Application;
 using Tommeplan.Domene;
 
 namespace Tommeplan.Controllers
@@ -13,6 +14,13 @@ namespace Tommeplan.Controllers
     [EnableCors("*", "*", "*")]
     public class PlanController : ApiController
     {
+        private readonly PlanService _service;
+
+        public PlanController(PlanService service)
+        {
+            _service = service;
+        }
+
         public Plan Get(string city, string road)
         {
             if (string.IsNullOrWhiteSpace(city))
@@ -46,6 +54,12 @@ namespace Tommeplan.Controllers
             }
             
             return GetPlan(id, road);
+        }
+
+        [Route("api/plan/:city/:id")]
+        public Plan GetWithId(Address address)
+        {
+            return _service.GetPlan(address);
         }
 
         private Plan GetPlanJevnaker(string road)

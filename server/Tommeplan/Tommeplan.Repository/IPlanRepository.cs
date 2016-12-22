@@ -7,6 +7,7 @@ namespace Tommeplan.Repository
     public interface IPlanRepository
     {
         Plan GetPlan(Address address);
-        Task<IEnumerable<Address>> GetAddresses(string text, string city);
+        Task<IEnumerable<Address>> GetAddressesAsync(string text);
+        IEnumerable<Address> GetAddresses(string text);
     }
 }

@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Tommeplan.Domene;
+using Tommeplan.Repository;
 
-namespace Tommeplan.Repository
+namespace Tommeplan.Application
 {
-    public class RepositoryHandler
+    public class PlanService
     {
         private readonly Dictionary<string, IPlanRepository> _repositoryDictionary;
-        
-        public RepositoryHandler(Dictionary<string, IPlanRepository> repositoryDictionary)
+
+        public PlanService(Dictionary<string, IPlanRepository> repositoryDictionary)
         {
-            if(repositoryDictionary == null || repositoryDictionary.Count == 0)
+            if (repositoryDictionary == null || repositoryDictionary.Count == 0)
             {
                 throw new Exception("At least one repository must exist.");
             }
@@ -20,25 +20,27 @@ namespace Tommeplan.Repository
             _repositoryDictionary = repositoryDictionary;
         }
 
-        public IEnumerable<Address> GetAddresses(string text)
+        public IEnumerable<Address> GetAddresses(string address)
         {
             var addressTasks =
                 _repositoryDictionary
-                    .Select(x => x.Value.GetAddresses(text, x.Key))
-                    .ToList();
-            addressTasks.ForEach(x => x.Start());
-            Task.WaitAll(addressTasks.ToArray());
+                    .Select(x =>
+                    {
+                        var task = x.Value.GetAddresses(address);
+                        return task;
+                    })
+                    .ToArray();
 
-            return addressTasks.SelectMany(x => x.Result);
+            return addressTasks.SelectMany(x => x);
         }
 
         public Plan GetPlan(Address address)
         {
-            if(address == null)
+            if (address == null)
             {
                 throw new ArgumentException("Unable to find plan with no address");
             }
-            return 
+            return
                 _repositoryDictionary[address.City]
                     .GetPlan(address);
         }

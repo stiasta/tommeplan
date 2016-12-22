@@ -21,7 +21,7 @@ namespace Tommeplan.Repository.Test
                 Assert.AreEqual(
                     0, 
                     repository
-                        .GetAddresses(string.Empty, string.Empty)
+                        .GetAddressesAsync(string.Empty)
                         .Result
                         .Count());
             }
@@ -33,7 +33,7 @@ namespace Tommeplan.Repository.Test
 
                 var result =
                     repository
-                        .GetAddresses("Blåklokkev", "Trondheim")
+                        .GetAddressesAsync("Blåklokkev")
                         .Result;
                 
                 Assert.True(result.Any(x => x.Road.Equals("Blåklokkevegen")));
@@ -48,6 +48,15 @@ namespace Tommeplan.Repository.Test
             {
                 var repository = new TRVPlanRepository();
                 Assert.Throws<ArgumentNullException>(() => repository.GetPlan(null));
+            }
+
+            [Test]
+            [Explicit]
+            public void WithAddressForBlåklokkevegen_ShouldReturnForBlåklokkevegen()
+            {
+                var repository = new TRVPlanRepository();
+                var plan = repository.GetPlan(new Address("Blåklokkevegen", "Trondheim", "108"));
+                Assert.NotNull(plan);
             }
         }
     }
