@@ -1,8 +1,8 @@
-using System;
 using Microsoft.Practices.Unity;
-using Microsoft.Practices.Unity.Configuration;
-using Tommeplan.Repository;
+using System;
 using System.Collections.Generic;
+using Tommeplan.Application;
+using Tommeplan.Repository;
 
 namespace Tommeplan.App_Start
 {
@@ -40,8 +40,8 @@ namespace Tommeplan.App_Start
             var dictionary = new Dictionary<string, IPlanRepository>();
             dictionary.Add("trondheim", new TRVPlanRepository());
 
-            container.RegisterInstance<RepositoryHandler>(
-                new RepositoryHandler(dictionary));
+            container.RegisterInstance<PlanService>(
+                new PlanService(dictionary));
 
             // TODO: Register your types here
             // container.RegisterType<IProductRepository, ProductRepository>();

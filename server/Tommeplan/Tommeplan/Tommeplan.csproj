@@ -358,6 +358,10 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Tommeplan.Application\Tommeplan.Application.csproj">
+      <Project>{139DD045-D2A2-40D4-BB1C-1480C03CB274}</Project>
+      <Name>Tommeplan.Application</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Tommeplan.Domene\Tommeplan.Domene.csproj">
       <Project>{9D312D64-4AE4-4FD3-80CA-379CB286760C}</Project>
       <Name>Tommeplan.Domene</Name>

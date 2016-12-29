@@ -41,7 +41,7 @@ namespace Tommeplan.Application
                 throw new ArgumentException("Unable to find plan with no address");
             }
             return
-                _repositoryDictionary[address.City]
+                _repositoryDictionary[address.City.ToLower()]
                     .GetPlan(address);
         }
     }

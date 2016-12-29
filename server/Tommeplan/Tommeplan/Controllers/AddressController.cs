@@ -1,26 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
+﻿using System.Collections.Generic;
 using System.Web.Http;
+using Tommeplan.Application;
 using Tommeplan.Domene;
-using Tommeplan.Repository;
 
 namespace Tommeplan.Controllers
 {
     public class AddressController : ApiController
     {
-        private RepositoryHandler _repository;
+        private PlanService _service;
 
-        public AddressController(RepositoryHandler repository)
+        public AddressController(PlanService service)
         {
-            _repository = repository;
+            _service = service;
         }
 
         public IEnumerable<Address> Get(string searchstring)
         {
-            return _repository.GetAddresses(searchstring);
+            return _service.GetAddresses(searchstring);
         }
     }
 }

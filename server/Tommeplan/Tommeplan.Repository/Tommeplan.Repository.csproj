@@ -50,7 +50,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IPlanRepository.cs" />
-    <Compile Include="RepositoryHandler.cs" />
     <Compile Include="TRVPlanRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
