@@ -3,10 +3,10 @@ import {Platform, ionicBootstrap} from 'ionic-angular';
 import {StatusBar} from 'ionic-native';
 import {HomeComponent} from './+home/home.component';
 import { PlanService, StorageService } from './+plan/index';
+import { AddressService } from './address/address.service';
 
 @Component({
   template: '<ion-nav [root]="rootPage"></ion-nav>',
-  providers: [PlanService, StorageService]
 })
 export class MyApp {
   rootPage: any = HomeComponent;
@@ -20,4 +20,4 @@ export class MyApp {
   }
 }
 
-ionicBootstrap(MyApp);
+ionicBootstrap(MyApp, [AddressService, PlanService, StorageService]);

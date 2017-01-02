@@ -18,7 +18,7 @@ export class Week {
     }
 
     getPresentationText(){
-        let currentWeek = moment().startOf('isoWeek' as any).subtract(1, 'week').week();
+        let currentWeek = moment().startOf('isoWeek' as any).week();
         if(currentWeek == this.weekNumber){
             return 'Denne uken';
         }
