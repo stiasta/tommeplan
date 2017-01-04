@@ -1,17 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Cors;
+using Tommeplan.Application;
+using Tommeplan.Domene;
 
 namespace Tommeplan.Controllers
 {
     [EnableCors("*", "*", "*")]
     public class PlanController : ApiController
     {
+        private readonly PlanService _service;
+
+        public PlanController(PlanService service)
+        {
+            _service = service;
+        }
+
         public Plan Get(string city, string road)
         {
             if (string.IsNullOrWhiteSpace(city))
@@ -47,6 +57,12 @@ namespace Tommeplan.Controllers
             return GetPlan(id, road);
         }
 
+        [Route("~/api/plan/{city}/{id}")]
+        public Plan GetWithId(string city, string id)
+        {
+            return _service.GetPlan(new Address(city, id));
+        }
+
         private Plan GetPlanJevnaker(string road)
         {
             using (var client = new HttpClient())
@@ -69,36 +85,7 @@ namespace Tommeplan.Controllers
 
         private Plan GetPlan(int roadId, string road)
         {
-            var client = GetHttpClient();
-            var result = 
-                client
-                    .GetAsync(
-                        string.Format(
-                            "http://trv.no/plan/{0}",
-                            roadId))
-                    .Result;
-            // avoiding robot redirect
-            if (result.RequestMessage.RequestUri.Authority.ToLower().Equals("robots.sircon.net"))
-            {
-                client.Dispose();
-                client = GetHttpClient();
-                var key = HttpUtility.ParseQueryString(result.RequestMessage.RequestUri.Query).Get("key");
-                result = 
-                    client
-                        .PostAsync(
-                            "http://trv.no/wp-content/themes/sircon/aj/aj.php?unlockkey=" + key,
-                            GetPostContentForPlan(road, roadId))
-                        .Result;
-            }
-
-            var html = result.Content.ReadAsStringAsync().Result;
-            if (string.IsNullOrWhiteSpace(html))
-            {
-                throw new HttpException((int)HttpStatusCode.NotFound, "Street not found");
-            }
-
-            client.Dispose();
-            return Plan.FromTRV(html);
+            return _service.GetPlan(new Address("Trondheim", roadId.ToString()));
         }
 
         private FormUrlEncodedContent GetPostRoadIdContent(string road)
@@ -113,36 +100,9 @@ namespace Tommeplan.Controllers
 
         private int GetRoadId(string road)
         {
-            var client = GetHttpClient();
-            var result =
-                client
-                    .GetAsync(
-                        string.Format(
-                            "http://trv.no/wp-json/wasteplan/v1/BINS/?s={0}",
-                            road))
-                    .Result;
-            // avoiding robot redirect
-            if (result.RequestMessage.RequestUri.Authority.ToLower().Equals("robots.sircon.net"))
-            {
-                client.Dispose();
-                client = GetHttpClient();
-                var key = HttpUtility.ParseQueryString(result.RequestMessage.RequestUri.Query).Get("key");
-                result = 
-                    client
-                        .PostAsync(
-                            "http://trv.no/wp-content/themes/sircon/aj/aj.php?unlockkey=" + key, 
-                            GetPostRoadIdContent(road))
-                        .Result;
-            }
-
-            var html = result.Content.ReadAsStringAsync().Result;
-            if (string.IsNullOrWhiteSpace(html))
-            {
-                throw new HttpException((int)HttpStatusCode.NotFound, "Street not found");
-            }
-
-            client.Dispose();
-            return Plan.ParseStreetIdFromTRV(html);
+            var addresses = _service.GetAddresses(road);
+            if (!addresses.Any() || addresses.Count() != 1) return -1;
+            return int.Parse(addresses.First().Id);
         }
 
         private HttpClient GetHttpClient()

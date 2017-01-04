@@ -1,9 +1,16 @@
-<ion-searchbar [(ngModel)]="searchInput" (ionInput)="search($event)" placeholder="Gateadresse" ></ion-searchbar>
 <ion-list>
+    <button ion-item no-lines (click)="openModal(searchInput)">
+        <ion-icon name="home" item-left></ion-icon>
+        {{searchInput}}
+        <ion-note item-right>
+            <ion-icon name="arrow-forward" item-right></ion-icon>
+        </ion-note>
+    </button>
+
     <ion-item *ngFor="let week of plan.activeWeeks()">
         {{ week.types }}
         <ion-note item-right>
             {{week.getPresentationText()}}
-        </ion-note>         
+        </ion-note>
     </ion-item>
 </ion-list>

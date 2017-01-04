@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using System.Linq;
+using Tommeplan.Domene;
 
 namespace Tommeplan.Test
 {

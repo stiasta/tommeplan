@@ -52,7 +52,9 @@ export class StorageService {
                     plan.weeks
                         .map(week =>
                             new Week(week.weekNumber, week.types)),
-                    plan.road);
+                    plan.road, 
+                    plan.city, 
+                    plan.id);
             });
         };
 

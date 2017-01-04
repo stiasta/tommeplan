@@ -1,0 +1,22 @@
+<ion-header>
+    <ion-toolbar>
+        <ion-title>
+            Description
+        </ion-title>
+        <ion-buttons start>
+            <button ion-button (click)="dismiss()">
+                <span color="primary" showWhen="ios">Cancel</span>
+                <ion-icon name="md-close" showWhen="android,windows"></ion-icon>
+                <ion-icon name="md-close" hideWhen="android,windows,ios"></ion-icon>
+            </button>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-header>
+<ion-content>
+    <ion-searchbar [(ngModel)]="searchInput" placeholder="Addresse" (ionInput)="search($event)"></ion-searchbar>
+    <ion-list>
+        <button ion-item *ngFor="let address of addresses" (click)="setAddress(address)">
+            {{address.road}}, {{address.city}}
+        </button>
+    </ion-list>
+</ion-content>

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Http, Headers, URLSearchParams } from '@angular/http';
 import * as $ from 'jquery';
-import { Observable } from 'rxjs/Rx';
+import { Observable, ReplaySubject } from 'rxjs/Rx';
 import { Plan } from './plan.model';
 import { Week } from './week.model';
 import { StorageService } from './storage.service';
@@ -9,37 +9,41 @@ import { Platform } from 'ionic-angular';
 
 @Injectable()
 export class PlanService {
+	private source: ReplaySubject<Plan> = new ReplaySubject<Plan>(1);
 	constructor(
 		private http: Http,
 		private platform: Platform,
 		private storage: StorageService) {
+		console.log("Planservice initiated.");
 	}
 
 	getLatest(): Observable<Plan> | Observable<any> | any { // very strange hack to get tslint to work properly :|
-		return this.storage.get('latest').map((plan: Plan) => plan);
+		this.storage.get('latest').map((plan: Plan) => this.source.next(plan)).subscribe(x => x);
+		return this.source.asObservable();
 	}
 
-	get(road: string) {
-		let params = new URLSearchParams();
-		params.append('city', 'trondheim');
-		params.append('road', road);
-		return this.http
-			.get('http://tommeplan.azurewebsites.net/api/plan', {
-				search: params
-			})
+	getWithId(id: string, city: string, road: string) {
+		return this
+			.http
+			.get('http://tommeplan.azurewebsites.net/api/plan/' + city + '/' + id)
 			.flatMap(response => {
-				let plan = this.mapToPlan(road, response.text());
-				return this.storage.set('latest', plan).map(() => plan);
-			});
+				let plan = this.mapToPlan2(road, city, id, response.text());
+				this.source.next(plan);
+				return this.saveToLocalstorage(plan).map(() => plan);
+			})
 	}
 
-	private mapToPlan(road: string, html: string) {
+	private saveToLocalstorage(plan: Plan) {
+		return this.storage.set('latest', plan);
+	}
+
+	private mapToPlan2(road: string, city: string, id: string, json: string) {
 		let weeks: Week[] = JSON
-			.parse(html)
+			.parse(json)
 			.weeks
-			.map(week => 
+			.map(week =>
 				new Week(parseInt(week.weekNumber), week.types));
-		return new Plan(weeks, road);
+		return new Plan(weeks, road, city, id);
 	}
 
 	private emptyPlan() {

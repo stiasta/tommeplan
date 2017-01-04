@@ -52,6 +52,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Tommeplan.Domene\Tommeplan.Domene.csproj">
+      <Project>{9d312d64-4ae4-4fd3-80ca-379cb286760c}</Project>
+      <Name>Tommeplan.Domene</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Tommeplan\Tommeplan.csproj">
       <Project>{F0A25EF0-83F7-4E75-8CD5-D8A205568376}</Project>
       <Name>Tommeplan</Name>
