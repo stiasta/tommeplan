@@ -46,16 +46,19 @@ export class StorageService {
                 Observable.fromPromise(NativeStorage.getItem(key)) : // using native storage
                 Observable.fromPromise(this._localStorage.get(key)); // defaulting to localstorage
 
-            return observable.map(json => {
-                var plan = JSON.parse(json);
-                return new Plan(
-                    plan.weeks
-                        .map(week =>
-                            new Week(week.weekNumber, week.types)),
-                    plan.road, 
-                    plan.city, 
-                    plan.id);
-            });
+            return observable
+                .map(json => JSON.parse(json))
+                .filter(json => json !== null)
+                .map(json => {
+                    var plan = JSON.parse(json);
+                    return new Plan(
+                        plan.weeks
+                            .map(week =>
+                                new Week(week.weekNumber, week.types)),
+                        plan.road,
+                        plan.city,
+                        plan.id);
+                });
         };
 
         return this._isPlatformReady ?
