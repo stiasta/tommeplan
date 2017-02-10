@@ -12,6 +12,10 @@ export class MyApp {
   rootPage: any = HomeComponent;
 
   constructor(platform: Platform) {
+    const foo = { bar: 'foobar'};
+    console.log(foo);
+    delete foo.bar;
+    console.log(foo);
     platform.ready().then(() => {
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
